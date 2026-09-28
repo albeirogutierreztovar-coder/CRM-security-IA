@@ -1,0 +1,6 @@
+{
+  "name": "SecurityCRM AI",
+  "description": "CRM y ERP inteligente para empresas de seguridad privada y vigilancia con gestión de puestos, guardas, turnos, novedades, incidentes, reportes y asistente de voz Security AI.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
