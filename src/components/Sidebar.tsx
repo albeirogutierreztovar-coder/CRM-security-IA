@@ -17,7 +17,8 @@ import {
   History,
   Settings,
   X,
-  Smartphone
+  Smartphone,
+  LogOut
 } from 'lucide-react';
 import { dbManager } from '../lib/supabaseClient';
 
@@ -46,6 +47,7 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   activeAlertsCount: number;
+  onSignOut?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -53,7 +55,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setActiveTab,
   isOpen,
   onClose,
-  activeAlertsCount
+  activeAlertsCount,
+  onSignOut
 }) => {
   const currentProfile = dbManager.getCurrentProfile();
 
@@ -164,8 +167,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
 
-        {/* Tenant Organization card */}
-        <div className="p-3 border-t border-slate-800 bg-slate-950/50">
+        {/* Tenant Organization card & Logout */}
+        <div className="p-3 border-t border-slate-800 bg-slate-950/50 space-y-2">
           <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800/80">
             <div className="flex items-center space-x-2.5">
               <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs text-cyan-400 border border-slate-700">
@@ -180,6 +183,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </div>
           </div>
+
+          {onSignOut && (
+            <button
+              onClick={onSignOut}
+              className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 text-xs font-medium border border-transparent hover:border-rose-500/30 transition-all"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Cerrar Sesión</span>
+            </button>
+          )}
         </div>
       </aside>
     </>

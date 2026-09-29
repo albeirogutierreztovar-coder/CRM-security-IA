@@ -23,11 +23,22 @@ import { AlertsView } from './views/AlertsView';
 import { AuditView } from './views/AuditView';
 import { SettingsView } from './views/SettingsView';
 import { MobileGuardView } from './views/MobileGuardView';
+import { LoginView } from './views/LoginView';
+import { authService, AuthState } from './services/authService';
 
 import { dbManager } from './lib/supabaseClient';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Shield, Loader2 } from 'lucide-react';
 
 export default function App() {
+  const [authState, setAuthState] = useState<AuthState>({
+    isAuthenticated: false,
+    user: null,
+    profile: null,
+    organization: null,
+    role: null,
+    loading: true,
+  });
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -43,6 +54,14 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Check initial auth state from Supabase / stored profile
+    authService.getInitialSession().then((session) => {
+      setAuthState(session);
+      if (session.isAuthenticated && session.role === 'GUARDA') {
+        setActiveTab('mobile-guard');
+      }
+    });
+
     const handleDataChange = () => {
       updateAlertsCount();
     };
@@ -50,8 +69,36 @@ export default function App() {
     return () => window.removeEventListener('securitycrm_datachange', handleDataChange);
   }, []);
 
+  const handleLoginSuccess = (newAuthState: AuthState) => {
+    setAuthState(newAuthState);
+    if (newAuthState.role === 'GUARDA') {
+      setActiveTab('mobile-guard');
+    } else {
+      setActiveTab('dashboard');
+    }
+    updateAlertsCount();
+  };
+
+  const handleSignOut = async () => {
+    await authService.signOut();
+    setAuthState({
+      isAuthenticated: false,
+      user: null,
+      profile: null,
+      organization: null,
+      role: null,
+      loading: false,
+      isDemoSession: false
+    });
+  };
+
   const handleProfileChange = () => {
     const current = dbManager.getCurrentProfile();
+    setAuthState(prev => ({
+      ...prev,
+      profile: current,
+      role: current.role
+    }));
     if (current.role === 'GUARDA') {
       setActiveTab('mobile-guard');
     } else {
@@ -63,6 +110,27 @@ export default function App() {
     setActiveTab(tab);
   };
 
+  // Loading state while checking Supabase Auth session
+  if (authState.loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div className="relative">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center shadow-xl shadow-cyan-900/40 ring-4 ring-cyan-500/20 mb-4 animate-pulse">
+            <Shield className="w-8 h-8 text-white" />
+          </div>
+          <Loader2 className="w-6 h-6 text-cyan-400 animate-spin absolute -bottom-2 -right-2" />
+        </div>
+        <h2 className="text-lg font-bold text-white mt-2">SecurityCRM AI</h2>
+        <p className="text-xs text-slate-400 mt-1">Conectando con Supabase Auth y base de datos...</p>
+      </div>
+    );
+  }
+
+  // If not authenticated, show professional Login & Registration view
+  if (!authState.isAuthenticated) {
+    return <LoginView onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased">
       {/* Sidebar Navigation */}
@@ -72,6 +140,7 @@ export default function App() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         activeAlertsCount={activeAlertsCount}
+        onSignOut={handleSignOut}
       />
 
       {/* Main Content Area */}
@@ -84,6 +153,7 @@ export default function App() {
           onOpenAI={() => setAiAssistantOpen(true)}
           activeAlertsCount={activeAlertsCount}
           onProfileChange={handleProfileChange}
+          onSignOut={handleSignOut}
         />
 
         {/* View Content Body */}

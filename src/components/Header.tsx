@@ -8,7 +8,8 @@ import {
   Shield,
   Building,
   CheckCircle2,
-  ChevronDown
+  ChevronDown,
+  LogOut
 } from 'lucide-react';
 import { dbManager } from '../lib/supabaseClient';
 import { DEMO_PROFILES } from '../lib/mockData';
@@ -21,6 +22,7 @@ interface HeaderProps {
   onOpenAI: () => void;
   activeAlertsCount: number;
   onProfileChange?: () => void;
+  onSignOut?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -29,7 +31,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNotifications,
   onOpenAI,
   activeAlertsCount,
-  onProfileChange
+  onProfileChange,
+  onSignOut
 }) => {
   const currentProfile = dbManager.getCurrentProfile();
   const organization = dbManager.getOrganization();
@@ -168,6 +171,21 @@ export const Header: React.FC<HeaderProps> = ({
                   );
                 })}
               </div>
+
+              {onSignOut && (
+                <div className="pt-2 mt-2 border-t border-slate-800">
+                  <button
+                    onClick={() => {
+                      setShowRoleSelector(false);
+                      onSignOut();
+                    }}
+                    className="w-full flex items-center space-x-2 px-3 py-2 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 text-xs font-semibold transition-colors"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Cerrar Sesión / Salir</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
